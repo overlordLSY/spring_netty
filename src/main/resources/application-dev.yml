@@ -1,0 +1,5 @@
+server:
+  port: 9080
+
+logback:
+  url: ${ELK_HOST:elk.elk:5044}
