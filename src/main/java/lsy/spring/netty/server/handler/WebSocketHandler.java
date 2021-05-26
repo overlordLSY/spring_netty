@@ -1,21 +1,19 @@
-package lsy.spring_netty.netty;
+package lsy.spring.netty.server.handler;
 
 import com.alibaba.fastjson.JSON;
-import lsy.spring_netty.bean.WebSocketMessage;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import lombok.extern.slf4j.Slf4j;
-import lsy.spring_netty.utils.RequestUtil;
+import lsy.spring.netty.server.bean.WebSocketChannelPool;
+import lsy.spring.netty.server.bean.WebSocketMessage;
+import lsy.spring.netty.utils.RequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.util.Map;
 
-/**
- * WebSocket处理
- */
 @Slf4j
 public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
 
@@ -52,7 +50,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
             // 消息处理，格式{"userId":123,"message":"消息内容"}
             WebSocketMessage messageDTO = JSON.parseObject(msg, WebSocketMessage.class);
             if (messageDTO.getUserId().equals(0L)) {
-                WebSocketChannelPool.getGlobalGroup().writeAndFlush(new TextWebSocketFrame(msg));
+                WebSocketChannelPool.globalGroup.writeAndFlush(new TextWebSocketFrame(msg));
             } else {
                 Channel channel = WebSocketChannelPool.getUserChannel(messageDTO.getUserId());
                 if (channel != null) {

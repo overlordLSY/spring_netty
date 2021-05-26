@@ -1,29 +1,28 @@
-package lsy.spring_netty.netty;
+package lsy.spring.netty.server;
 
-import lsy.spring_netty.config.SystemConfig;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
+import lsy.spring.netty.config.SpringNettyServerConfig;
+import lsy.spring.netty.server.initializer.NettyChannelInitializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-/**
- * Netty服务端
- * 本地Junit测试需要加上注解@Profile("!dev")
- */
 @Slf4j
 @Component
-@Profile("!dev")
+@ConditionalOnProperty(name = "lsy.netty.server.active", havingValue = "true")
 public class NettyServer implements CommandLineRunner {
 
     @Autowired
-    private SystemConfig systemConfig;
+    private SpringNettyServerConfig serverConfig;
 
     @Override
     public void run(String... args) throws Exception {
@@ -33,9 +32,9 @@ public class NettyServer implements CommandLineRunner {
             ServerBootstrap sb = new ServerBootstrap()
                     .group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .localAddress(systemConfig.getNetty().getPort())
-                    // 如需打印出入站日志，可以加上.handler(new LoggingHandler(LogLevel.INFO))
-                    .childHandler(new NettyChannelInitializer(systemConfig.getNetty().getPath()))
+                    .localAddress(serverConfig.getPort())
+                    .handler(new LoggingHandler(LogLevel.INFO))
+                    .childHandler(new NettyChannelInitializer(serverConfig.getHandlerClass(), serverConfig.getPath()))
                     .option(ChannelOption.SO_BACKLOG, 1024)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
             ChannelFuture cf = sb.bind().sync();

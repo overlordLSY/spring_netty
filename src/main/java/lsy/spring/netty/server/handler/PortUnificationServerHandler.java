@@ -1,4 +1,4 @@
-package lsy.spring_netty.netty;
+package lsy.spring.netty.server.handler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -8,6 +8,8 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketServerCompressionHandler;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import org.apache.commons.lang3.StringUtils;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -27,8 +29,8 @@ public class PortUnificationServerHandler extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         if (isWebSocket(in)) {
             switchToWebSocket(ctx.pipeline());
-        } else if (isTask(in)) {
-            switchToTask(ctx.pipeline());
+        } else if (isHeartbeat(in)) {
+            switchToHeartbeat(ctx.pipeline());
         } else {
             // 其他协议直接忽略
             in.clear();
@@ -57,8 +59,8 @@ public class PortUnificationServerHandler extends ByteToMessageDecoder {
     /**
      * 判断请求是否为自定义调起定时任务协议
      */
-    private boolean isTask(ByteBuf in) {
-        return checkSocketHead(in, "TASK ");
+    private boolean isHeartbeat(ByteBuf in) {
+        return checkSocketHead(in, "PING ");
     }
 
     /**
@@ -76,8 +78,10 @@ public class PortUnificationServerHandler extends ByteToMessageDecoder {
     /**
      * 自定义协议处理，调起定时任务
      */
-    private void switchToTask(ChannelPipeline pipeline) {
-        pipeline.addLast(new TaskHandler());
+    private void switchToHeartbeat(ChannelPipeline pipeline) {
+        pipeline.addLast(new StringDecoder());
+        pipeline.addLast(new HeartbeatHandler());
+        pipeline.addLast(new StringEncoder());
         pipeline.remove(this);
     }
 

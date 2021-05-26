@@ -1,4 +1,4 @@
-package lsy.spring_netty.bean;
+package lsy.spring.netty.server.bean;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
